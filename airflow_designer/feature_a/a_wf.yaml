@@ -5,9 +5,9 @@ a_wf:
     retry_delay_sec: 6000
     nsml_cfg:
       login:
-        username: ''
-        password: ''
-      docker_image: 'None'
+        username: None
+        password: None
+      docker_image: None
   schedule_interval: 22 20 * * *
   tasks:
     task_a:
@@ -15,9 +15,9 @@ a_wf:
         jutopia_airflow_plugin.jutopia_plugin.operators.mlu_k8s_pod_operator.MLUK8SPodOperator
       on_failure_callback: dags.repo.airflow_plugins.slack_alert.send_task_fail
       arguments:
-        - /opt/airflow/FLYTE-AIRFLOW-PLUGIN/src/jutopia/jutopia_spark_submit.py
+        - /opt/airflow/ECAC-SMCH/src/jutopia/jutopia_spark_submit.py
         - '--py_path'
-        - FLYTE-AIRFLOW-PLUGIN/src/task/a_task.py
+        - ECAC-SMCH/src/task/a_task.py
         - '--spark_args'
         - >-
           --query_date {{ macros.ds_format(macros.ds_add(data_interval_end | ds,
@@ -28,15 +28,15 @@ a_wf:
         - '{{ var.value.get(''jutopia_cluster_user_id'', '''') }}'
       cmds:
         - python
-      image: 'flyte-airflow-plugin/service/alpha:latest'
+      image: 'harbor.linecorp.com/ecacda/smch/service/ft-sample-code'
     task_b:
       operator: >-
         jutopia_airflow_plugin.jutopia_plugin.operators.mlu_k8s_pod_operator.MLUK8SPodOperator
       on_failure_callback: dags.repo.airflow_plugins.slack_alert.send_task_fail
       arguments:
-        - /opt/airflow/FLYTE-AIRFLOW-PLUGIN/src/task/b_task.py
+        - /opt/airflow/ECAC-SMCH/src/task/b_task.py
       cmds:
         - python
-      image: 'flyte-airflow-plugin/service/alpha:latest'
+      image: 'harbor.linecorp.com/ecacda/smch/service/ft-sample-code'
       dependencies:
         - task_a
