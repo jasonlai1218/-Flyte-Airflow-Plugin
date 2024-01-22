@@ -1,0 +1,42 @@
+a_wf:
+  default_args:
+    start_date: 2024-01-22T00:00:00.000Z
+    retries: 1
+    retry_delay_sec: 6000
+    nsml_cfg:
+      login:
+        username: ''
+        password: ''
+      docker_image: 'None'
+  schedule_interval: 22 20 * * *
+  tasks:
+    task_a:
+      operator: >-
+        jutopia_airflow_plugin.jutopia_plugin.operators.mlu_k8s_pod_operator.MLUK8SPodOperator
+      on_failure_callback: dags.repo.airflow_plugins.slack_alert.send_task_fail
+      arguments:
+        - /opt/airflow/FLYTE-AIRFLOW-PLUGIN/src/jutopia/jutopia_spark_submit.py
+        - '--py_path'
+        - FLYTE-AIRFLOW-PLUGIN/src/task/a_task.py
+        - '--spark_args'
+        - >-
+          --query_date {{ macros.ds_format(macros.ds_add(data_interval_end | ds,
+          +1), '%Y-%m-%d', '%Y%m%d') }}
+        - '--keytab_base64'
+        - '{{ var.value.get(''jutopia_cluster_keytab_base64'', '''') }}'
+        - '--user_id'
+        - '{{ var.value.get(''jutopia_cluster_user_id'', '''') }}'
+      cmds:
+        - python
+      image: 'flyte-airflow-plugin/service/alpha:latest'
+    task_b:
+      operator: >-
+        jutopia_airflow_plugin.jutopia_plugin.operators.mlu_k8s_pod_operator.MLUK8SPodOperator
+      on_failure_callback: dags.repo.airflow_plugins.slack_alert.send_task_fail
+      arguments:
+        - /opt/airflow/FLYTE-AIRFLOW-PLUGIN/src/task/b_task.py
+      cmds:
+        - python
+      image: 'flyte-airflow-plugin/service/alpha:latest'
+      dependencies:
+        - task_a
